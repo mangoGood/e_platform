@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: docker.1ms.run/mysql:8.0
+    container_name: e-platform-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: e_platform
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4' --skip-character-set-client-handshake
+    networks:
+      e-platform-network:
+        ipv4_address: 192.168.10.10
+
+  redis:
+    image: docker.1ms.run/bitnami/redis:latest
+    container_name: e-platform-redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      e-platform-network:
+        ipv4_address: 192.168.10.11
+
+  rabbitmq:
+    image: docker.1ms.run/library/rabbitmq:latest
+    container_name: e-platform-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      e-platform-network:
+        ipv4_address: 192.168.10.12
+
+networks:
+  e-platform-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.10.0/25
+          gateway: 192.168.10.1
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:

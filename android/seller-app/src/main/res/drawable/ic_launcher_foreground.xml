@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 店铺/卖家图标：简化的店铺招牌 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,40 L70,40 L70,76 L38,76 Z M34,40 L34,36 L74,36 L74,40 Z M44,52 L64,52 L64,56 L44,56 Z M44,60 L64,60 L64,64 L44,64 Z" />
+</vector>

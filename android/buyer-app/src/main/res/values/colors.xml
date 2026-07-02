@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主题色：橙色 -->
+    <color name="brand_primary">#FFFF6B35</color>
+    <color name="brand_primary_dark">#FFE55A2B</color>
+    <color name="brand_secondary">#FFFFA500</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="background">#FFF5F5F5</color>
+</resources>

@@ -1,0 +1,37 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: e-platform-gateway
+  # Nacos 服务注册发现（默认禁用，设置 NACOS_ENABLED=true 启用）
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_ENABLED:false}
+        server-addr: ${NACOS_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+  thymeleaf:
+    cache: false
+    prefix: classpath:/static/
+    suffix: .html
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+logging:
+  level:
+    com.ecommerce.gateway: INFO
+
+jwt:
+  secret: ${JWT_SECRET}
+
+service:
+  user:
+    url: http://localhost:8085
+  product:
+    url: http://localhost:8086
+  order:
+    url: http://localhost:8087
+  mobile:
+    url: http://localhost:8089

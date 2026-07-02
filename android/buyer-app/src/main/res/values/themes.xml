@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- 基础主题 -->
+    <style name="Theme.EPlatformBuyer" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/brand_primary</item>
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+
+    <!-- 启动页主题 -->
+    <style name="Theme.EPlatformBuyer.Splash" parent="Theme.EPlatformBuyer">
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+</resources>

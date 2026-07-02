@@ -1,0 +1,30 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: e-platform-mobile
+  # Nacos 服务注册发现（默认禁用，设置 NACOS_ENABLED=true 启用）
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_ENABLED:false}
+        server-addr: ${NACOS_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:public}
+
+# 移动端 BFF 通过 Feign 调用内部微服务
+# Nacos 启用时 Feign 通过服务名寻址，禁用时使用以下 url
+service:
+  user:
+    url: http://localhost:8085
+  product:
+    url: http://localhost:8086
+  order:
+    url: http://localhost:8087
+
+jwt:
+  secret: ${JWT_SECRET}
+
+logging:
+  level:
+    com.ecommerce.mobile: INFO

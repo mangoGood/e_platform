@@ -1,0 +1,1 @@
+import{r as e}from"./request-89281019.js";const t={register(r){return e.post("/user/register",r)},login(r){return e.post("/user/login",r)},getUserInfo(r){return e.get(`/user/info/${r}`)}};export{t as u};
