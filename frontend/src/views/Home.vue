@@ -3,7 +3,7 @@
     <div class="banner">
       <el-carousel height="400px">
         <el-carousel-item v-for="item in banners" :key="item.id">
-          <div class="banner-item" :style="{ backgroundColor: item.color }">
+          <div class="banner-item" :class="`banner-item--${item.theme}`">
             <h2>{{ item.title }}</h2>
             <p>{{ item.desc }}</p>
           </div>
@@ -67,9 +67,11 @@ const categories = ref([])
 const products = ref([])
 
 const banners = ref([
-  { id: 1, title: '新品上市', desc: '最新款电子产品，限时优惠', color: '#ff6700' },
-  { id: 2, title: '品质生活', desc: '精选家居好物，提升生活品质', color: '#00c6ff' },
-  { id: 3, title: '时尚穿搭', desc: '潮流服饰，展现个性风采', color: '#ff4757' }
+  // 用主题类名替代写死的 16 进制色：三张 banner 原先是橙 / 天蓝 / 玫红三个
+  // 互不相干的色系，拼在一起像三个不同的站点。这里统一到品牌色的深浅变体。
+  { id: 1, title: '新品上市', desc: '最新款电子产品，限时优惠', theme: 'primary' },
+  { id: 2, title: '品质生活', desc: '精选家居好物，提升生活品质', theme: 'deep' },
+  { id: 3, title: '时尚穿搭', desc: '潮流服饰，展现个性风采', theme: 'warm' }
 ])
 
 onMounted(async () => {
@@ -113,7 +115,11 @@ const goToProduct = (productId) => {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      color: #fff;
+      color: $color-text-inverse;
+
+      &--primary { background: $gradient-brand; }
+      &--deep    { background: linear-gradient(135deg, $brand-600 0%, $brand-800 100%); }
+      &--warm    { background: linear-gradient(135deg, $brand-400 0%, $brand-600 100%); }
       
       h2 {
         font-size: 48px;
@@ -130,7 +136,7 @@ const goToProduct = (productId) => {
     font-size: 28px;
     margin-bottom: 30px;
     padding-left: 15px;
-    border-left: 4px solid #ff6700;
+    border-left: 4px solid $color-primary;
   }
   
   .category-section {
@@ -142,7 +148,7 @@ const goToProduct = (productId) => {
       gap: 15px;
       
       .category-card {
-        background: #fff;
+        background: $color-bg-card;
         padding: 20px;
         border-radius: 8px;
         text-align: center;
@@ -151,8 +157,8 @@ const goToProduct = (productId) => {
         
         &:hover {
           transform: translateY(-5px);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-          color: #ff6700;
+          box-shadow: $shadow-md;
+          color: $color-primary;
         }
         
         span {
@@ -171,14 +177,14 @@ const goToProduct = (productId) => {
       gap: 20px;
       
       .product-card {
-        background: #fff;
+        background: $color-bg-card;
         border-radius: 8px;
         overflow: hidden;
         transition: all 0.3s;
         
         &:hover {
           transform: translateY(-5px);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+          box-shadow: $shadow-md;
         }
         
         .product-image {
@@ -204,7 +210,7 @@ const goToProduct = (productId) => {
           }
           
           .product-desc {
-            color: #999;
+            color: $color-text-secondary;
             font-size: 14px;
             margin-bottom: 10px;
             overflow: hidden;
@@ -218,7 +224,7 @@ const goToProduct = (productId) => {
             align-items: center;
             
             .sales {
-              color: #999;
+              color: $color-text-secondary;
               font-size: 12px;
             }
           }

@@ -51,5 +51,43 @@ logging:
     com.ecommerce: info
 
 # 内部服务调用令牌
+# 【安全】不设默认值：写死 ePlatformInternalSecret2026 这类兜底口令等于把内部接口的钥匙
+# 提交进公开仓库。未配置时为空串，ProductController 会拒绝一切内部调用，
+# FeignConfig 也不会往出站请求上挂该头 —— 宁可显式失败，也不用人尽皆知的默认密码。
 internal:
-  token: ${INTERNAL_TOKEN:ePlatformInternalSecret2026}
+  token: ${INTERNAL_TOKEN:}
+
+# product -> 其他服务的直连地址（Feign，不经网关）
+service:
+  order:
+    url: ${ORDER_SERVICE_URL:http://localhost:8087}
+  user:
+    url: ${USER_SERVICE_URL:http://localhost:8085}
+
+# Feign 超时：购买校验挂在评价写入的主链路上，必须快速失败而不是拖死请求
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 2000
+        read-timeout: 3000
+
+# 网关 -> 内部服务 HMAC-SHA256 签名校验
+# secret 来源于环境变量 GATEWAY_SIGN_SECRET（start.sh 自动随机生成写入 .env）
+# 此处给空默认值仅为保证服务在裸启动时不因占位符解析失败；
+# 真实的「启用但密钥为空」校验由 GatewaySignProperties 在 T02 中 fail-fast 处理
+gateway:
+  sign:
+    enabled: ${GATEWAY_SIGN_ENABLED:true}
+    secret: ${GATEWAY_SIGN_SECRET:}
+    tolerance-ms: ${GATEWAY_SIGN_TOLERANCE_MS:300000}
+
+# 健康检查端点，供 start.sh 轮询判定服务就绪
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

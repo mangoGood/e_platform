@@ -31,6 +31,27 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+        <!-- 健康检查端点 /actuator/health，供 start.sh 判定服务就绪 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!--
+            Redis：网关需要读 Token 黑名单（auth:blacklist:{jti}）与角色权限缓存
+            （rbac:role:{code}:perms）。注意这里只引 starter，绝不引 e-platform-common ——
+            common 中的 GatewaySignatureInterceptor 会自动装配，把网关自己的入站请求拦下来，
+            形成自锁。网关与 common 之间的算法一致性靠 HMAC 规格文档 + 双方代码注释保证。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
+
         <!-- Nacos 服务注册发现（可选，通过配置启用） -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

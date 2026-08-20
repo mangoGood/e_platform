@@ -169,53 +169,53 @@ const handleRegister = async () => {
 
 <style lang="scss" scoped>
 .register-page {
-  min-height: calc(100vh - 60px - 200px);
+  min-height: calc(100vh - #{$layout-header-height} - #{$layout-footer-height});
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  
+  padding: $space-10 $space-4;
+  // 与 Login.vue 保持同一套品牌渐变，去掉原先与主色无关的紫色。
+  background: $gradient-brand;
+
   .register-container {
     width: 450px;
-    background: #fff;
-    border-radius: 10px;
-    padding: 40px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    
+    max-width: 100%;
+    background: $color-bg-card;
+    border-radius: $radius-xl;
+    padding: $space-10;
+    box-shadow: $shadow-lg;
+
     .register-header {
       text-align: center;
-      margin-bottom: 30px;
-      
+      margin-bottom: $space-8;
+
       h2 {
-        font-size: 28px;
-        color: #333;
+        font-size: $font-2xl;
+        font-weight: $font-weight-bold;
+        color: $color-text-title;
       }
     }
-    
+
     .register-form {
       .register-btn {
         width: 100%;
-        height: 45px;
-        font-size: 16px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        
-        &:hover {
-          opacity: 0.9;
-        }
+        height: 44px;
+        font-size: $font-md;
+        letter-spacing: 2px;
       }
     }
-    
+
     .register-footer {
       text-align: center;
-      margin-top: 20px;
-      color: #999;
-      
+      margin-top: $space-4;
+      color: $color-text-secondary;
+      font-size: $font-base;
+
       .login-link {
-        color: #667eea;
-        text-decoration: none;
-        margin-left: 5px;
-        
+        color: $color-primary;
+        margin-left: $space-1;
+        font-weight: $font-weight-medium;
+
         &:hover {
           text-decoration: underline;
         }

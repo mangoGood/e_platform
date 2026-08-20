@@ -18,11 +18,27 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/
+  # Redis：网关读取 Token 黑名单 auth:blacklist:{jti} 与角色权限缓存 rbac:role:{code}:perms
+  # Redis 不可用时 TokenResolver 会自动降级（黑名单 fail-open + 权限走静态兜底表），
+  # 不会导致网关整体不可用
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 16
+        max-wait: -1
+        max-idle: 16
+        min-idle: 0
 
 logging:
   level:
     com.ecommerce.gateway: INFO
 
+# JWT：secret 无默认值，缺失即启动失败（fail-fast）。由 .env / start.sh 注入
 jwt:
   secret: ${JWT_SECRET}
 
@@ -35,3 +51,41 @@ service:
     url: http://localhost:8087
   mobile:
     url: http://localhost:8089
+
+# 网关签名：网关侧持有同一份密钥用于「签发」，各内部服务用它「验签」
+# secret 来源于环境变量 GATEWAY_SIGN_SECRET（start.sh 自动随机生成写入 .env）
+# 此处给空默认值仅为保证服务在裸启动时不因占位符解析失败；
+# 真实的「启用但密钥为空」校验由 GatewaySignProperties 在 T02 中 fail-fast 处理
+gateway:
+  sign:
+    enabled: ${GATEWAY_SIGN_ENABLED:true}
+    secret: ${GATEWAY_SIGN_SECRET:}
+    tolerance-ms: ${GATEWAY_SIGN_TOLERANCE_MS:300000}
+
+# 秒杀排队（网关侧，Redis ZSet + Lua 原子脚本）
+# 时间类参数单位一律为「秒」，与 .env.example 保持一致；内部转毫秒后才写入 Redis score
+# 关闭（queue.enabled=false）时 RedisQueueService 不注册，由 NoopQueueService 全量放行
+# Redis 不可用时自动降级为本地信号量，拿不到名额也放行 —— 排队是流控，不是可用性单点
+queue:
+  enabled: ${QUEUE_ENABLED:true}
+  permits: ${QUEUE_PERMITS:50}
+  max-length: ${QUEUE_MAX_LENGTH:500}
+  wait-timeout: ${QUEUE_WAIT_TIMEOUT:60}
+  permit-ttl: ${QUEUE_PERMIT_TTL:30}
+  poll-interval: ${QUEUE_POLL_INTERVAL:2}
+  # 受保护路径白名单，格式 METHOD:antPattern（METHOD 可用 * 通配）
+  # 刻意不做全站生效：给每个请求加一次 Redis 往返，排队自己就会变成全站延迟来源
+  # 路径已剥离 /api 前缀，与 RoutePermissionRegistry 的口径一致
+  protected-paths:
+    - POST:/order/create
+    - PUT:/product/*/deduct
+
+# 健康检查端点，供 start.sh 轮询判定服务就绪
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

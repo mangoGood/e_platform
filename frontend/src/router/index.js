@@ -75,18 +75,35 @@ const router = createRouter({
   routes
 })
 
+/**
+ * 全局前置守卫。
+ *
+ * 卖家路由的判定改为基于 RBAC 角色（`ROLE_SELLER`）而不是
+ * 改造前硬编码的 `userStore.userType !== 2` 魔法数字。
+ * 兼容兜底在 `userStore.isSeller` 内部：roles 为空（存量登录态）时才回退看 userType，
+ * 这样已经登录的老用户不会在改造后被挡在卖家中心外面。
+ */
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title || '电商平台'
-  
+
   const userStore = useUserStore()
-  
+
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
-  } else if (to.meta.requiresSeller && userStore.userType !== 2) {
-    next({ name: 'Home' })
-  } else {
-    next()
+    return
   }
+
+  if (to.meta.requiresSeller && !userStore.isSeller) {
+    next({ name: 'Home' })
+    return
+  }
+
+  if (to.meta.requiresAdmin && !userStore.isAdmin) {
+    next({ name: 'Home' })
+    return
+  }
+
+  next()
 })
 
 export default router

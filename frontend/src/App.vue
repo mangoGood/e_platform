@@ -1,18 +1,19 @@
 <template>
   <div id="app">
     <router-view />
+    <!-- 排队遮罩挂在根节点：下单入口分布在 ProductDetail / Cart 多处，
+         挂一次就能全局复用，页面本身不需要感知排队的存在。 -->
+    <QueueOverlay />
   </div>
 </template>
 
 <script setup>
+import QueueOverlay from '@/components/QueueOverlay.vue'
 </script>
 
-<style>
+<style lang="scss">
 #app {
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
+  font-family: $font-family-base;
+  color: $color-text-primary;
 }
 </style>

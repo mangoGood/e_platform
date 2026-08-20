@@ -25,7 +25,19 @@ public class Product implements Serializable {
     private Integer stock;
     
     private Integer sales;
-    
+
+    /**
+     * 平均评分（L1 聚合结果，migration-v2 新增列）。
+     *
+     * <p>写路径：L1 新增/编辑/删除时，在<b>同一个事务</b>内由
+     * {@code ProductMapper.refreshRating} 整体重算写入；
+     * 另有 {@code RatingSyncJob} 每晚全量兜底一次，防御任何漏更新。
+     */
+    private BigDecimal ratingAvg = BigDecimal.ZERO;
+
+    /** 有效评价数（L1），与 {@link #ratingAvg} 同源同事务维护。 */
+    private Integer ratingCount = 0;
+
     private String mainImage;
     
     private String images;
@@ -59,6 +71,10 @@ public class Product implements Serializable {
     public void setStock(Integer stock) { this.stock = stock; }
     public Integer getSales() { return sales; }
     public void setSales(Integer sales) { this.sales = sales; }
+    public BigDecimal getRatingAvg() { return ratingAvg; }
+    public void setRatingAvg(BigDecimal ratingAvg) { this.ratingAvg = ratingAvg; }
+    public Integer getRatingCount() { return ratingCount; }
+    public void setRatingCount(Integer ratingCount) { this.ratingCount = ratingCount; }
     public String getMainImage() { return mainImage; }
     public void setMainImage(String mainImage) { this.mainImage = mainImage; }
     public String getImages() { return images; }

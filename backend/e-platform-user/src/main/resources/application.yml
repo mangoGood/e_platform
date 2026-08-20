@@ -50,6 +50,34 @@ logging:
   level:
     com.ecommerce: info
 
+# JWT：secret 无默认值，缺失即启动失败（fail-fast）。由 .env / start.sh 注入
 jwt:
   secret: ${JWT_SECRET}
   expiration: 604800000
+
+# 网关 -> 内部服务 HMAC-SHA256 签名校验
+# secret 来源于环境变量 GATEWAY_SIGN_SECRET（start.sh 自动随机生成写入 .env）
+# 此处给空默认值仅为保证服务在裸启动时不因占位符解析失败；
+# 真实的「启用但密钥为空」校验由 GatewaySignProperties 在 T02 中 fail-fast 处理
+gateway:
+  sign:
+    enabled: ${GATEWAY_SIGN_ENABLED:true}
+    secret: ${GATEWAY_SIGN_SECRET:}
+    tolerance-ms: ${GATEWAY_SIGN_TOLERANCE_MS:300000}
+
+# 服务间直连内部令牌（T02 IAM 加固补全）。
+# 允许携带正确 X-Internal-Token 的服务间直连调用（如 mobile BFF -> user）
+# 绕过网关签名校验，与网关签名二选一。取值来自 .env INTERNAL_TOKEN，
+# 须与调用方（mobile）的 internal.token 完全一致。
+internal:
+  token: ${INTERNAL_TOKEN:}
+
+# 健康检查端点，供 start.sh 轮询判定服务就绪
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

@@ -18,8 +18,11 @@ public class CategoryService {
 
     public List<Category> getCategoryTree() {
         LambdaQueryWrapper<Category> wrapper = new LambdaQueryWrapper<>();
+        // sort 是人工维护的排序权重，大量并列是常态（默认值往往都是 0），
+        // 不带主键兜底时同级分类的展示顺序在每次查询之间都可能变化。
         wrapper.eq(Category::getStatus, 1)
-               .orderByAsc(Category::getSort);
+               .orderByAsc(Category::getSort)
+               .orderByAsc(Category::getId);
         
         List<Category> allCategories = categoryMapper.selectList(wrapper);
         
@@ -34,7 +37,8 @@ public class CategoryService {
     public List<Category> getAllCategories() {
         LambdaQueryWrapper<Category> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Category::getStatus, 1)
-               .orderByAsc(Category::getSort);
+               .orderByAsc(Category::getSort)
+               .orderByAsc(Category::getId);
         return categoryMapper.selectList(wrapper);
     }
 }

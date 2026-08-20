@@ -22,9 +22,39 @@ service:
   order:
     url: http://localhost:8087
 
+# JWT：secret 无默认值，缺失即启动失败（fail-fast）。由 .env / start.sh 注入
 jwt:
   secret: ${JWT_SECRET}
+
+# 网关 -> 内部服务 HMAC-SHA256 签名校验
+# secret 来源于环境变量 GATEWAY_SIGN_SECRET（start.sh 自动随机生成写入 .env）
+# 此处给空默认值仅为保证服务在裸启动时不因占位符解析失败；
+# 真实的「启用但密钥为空」校验由 GatewaySignProperties 在 T02 中 fail-fast 处理
+gateway:
+  sign:
+    enabled: ${GATEWAY_SIGN_ENABLED:true}
+    secret: ${GATEWAY_SIGN_SECRET:}
+    tolerance-ms: ${GATEWAY_SIGN_TOLERANCE_MS:300000}
+
+# 服务间直连内部令牌（T02 IAM 加固补全）。
+# mobile BFF 经 Feign 直连 user/product/order，绕过了网关签名，
+# 因此必须携带 X-Internal-Token 供下游 GatewaySignatureInterceptor 放行
+# （与网关签名二选一）。取值与下游 user 服务保持一致（均来自 .env INTERNAL_TOKEN）。
+# 注意：product / order 目前同样未配置 internal.token，mobile→product / order 的
+# 直连调用仍会被拒（属同一类遗留缺口，见交付报告），本配置仅先打通 mobile->user。
+internal:
+  token: ${INTERNAL_TOKEN:}
 
 logging:
   level:
     com.ecommerce.mobile: INFO
+
+# 健康检查端点，供 start.sh 轮询判定服务就绪
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

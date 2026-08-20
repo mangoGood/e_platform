@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ecommerce.core.model.Product
+import com.ecommerce.core.ui.ErrorView
+import com.ecommerce.core.ui.LoadingView
 import com.ecommerce.core.ui.formatPrice
 import com.ecommerce.core.ui.toImageUrl
 
@@ -81,6 +82,17 @@ fun ProductDetailScreen(
         }
     }
 
+    // 评论区的错误只在**列表已有内容**时走 Snackbar（多半是提交失败）。
+    // 列表为空时错误由评论区内部渲染成带「重试」的占位，此处不抢着消费掉，
+    // 否则刚渲染出来的错误占位会被立刻清空，用户什么也看不到。
+    LaunchedEffect(uiState.comment.errorMessage) {
+        val message = uiState.comment.errorMessage
+        if (message != null && uiState.comment.comments.isNotEmpty()) {
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearCommentError()
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -93,7 +105,11 @@ fun ProductDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = onGoToCart) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = "购物车", tint = Color.White)
+                        Icon(
+                            Icons.Default.ShoppingCart,
+                            contentDescription = "购物车",
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -102,14 +118,13 @@ fun ProductDetailScreen(
             )
         },
         bottomBar = {
-            if (uiState.product != null) {
+            val product = uiState.product
+            if (product != null) {
                 BottomActionBar(
-                    product = uiState.product!!,
+                    product = product,
                     quantity = uiState.quantity,
-                    onDecrease = { viewModel.changeQuantity(-1) },
-                    onIncrease = { viewModel.changeQuantity(1) },
                     onAddToCart = { viewModel.addToCart() },
-                    onBuyNow = { onBuyNow(uiState.product!!.id) }
+                    onBuyNow = { onBuyNow(product.id) }
                 )
             }
         }
@@ -120,35 +135,58 @@ fun ProductDetailScreen(
                 .padding(padding)
                 .background(Color(0xFFF5F5F5))
         ) {
+            val product = uiState.product
             when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFFFF6B35)
-                    )
-                }
-                uiState.product == null -> {
-                    Text(
-                        text = uiState.errorMessage ?: "商品不存在",
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.Gray
-                    )
-                }
-                else -> {
-                    ProductDetailContent(uiState.product!!, uiState.quantity) { delta ->
-                        viewModel.changeQuantity(delta)
-                    }
-                }
+                uiState.isLoading -> LoadingView()
+
+                product == null -> ErrorView(
+                    message = uiState.errorMessage ?: "商品不存在",
+                    // 改造前这里是一个纯 Text，加载失败后用户只能退出重进。
+                    // ErrorView 的 onRetry 参数以前是死参数，现已修好，这里正式接上。
+                    onRetry = { viewModel.loadProduct(productId) }
+                )
+
+                else -> ProductDetailContent(
+                    product = product,
+                    quantity = uiState.quantity,
+                    commentState = uiState.comment,
+                    onQuantityChange = { delta -> viewModel.changeQuantity(delta) },
+                    onRetryComments = { viewModel.loadComments() },
+                    onLoadMoreComments = { viewModel.loadMoreComments() },
+                    onExpandAsks = { rootId -> viewModel.expandAsks(rootId) },
+                    onToggleReviewForm = { open -> viewModel.toggleReviewForm(open) },
+                    onSubmitReview = { rating, content -> viewModel.submitReview(rating, content) },
+                    onToggleAskInput = { commentId -> viewModel.toggleAskInput(commentId) },
+                    onSubmitAsk = { commentId, content -> viewModel.submitAsk(commentId, content) },
+                    onDeleteComment = { commentId -> viewModel.deleteComment(commentId) }
+                )
             }
         }
     }
 }
 
+/**
+ * 商品详情正文：主图 / 价格 / 数量 / 描述 / **评论区**。
+ *
+ * 整体挂在一个 `verticalScroll` 的 Column 上而不是 LazyColumn：
+ * 页面区块数量固定且不多，用 LazyColumn 反而要把每个区块拆成 item，
+ * 还要处理评论区内部 LazyColumn 的嵌套滚动冲突。
+ * 评论图片横向列表用 LazyRow——横纵轴不同，不构成嵌套滚动问题。
+ */
 @Composable
 private fun ProductDetailContent(
-    product: com.ecommerce.core.model.Product,
+    product: Product,
     quantity: Int,
-    onQuantityChange: (Int) -> Unit
+    commentState: CommentUiState,
+    onQuantityChange: (Int) -> Unit,
+    onRetryComments: () -> Unit,
+    onLoadMoreComments: () -> Unit,
+    onExpandAsks: (Long) -> Unit,
+    onToggleReviewForm: (Boolean) -> Unit,
+    onSubmitReview: (Int, String) -> Unit,
+    onToggleAskInput: (Long?) -> Unit,
+    onSubmitAsk: (Long, String) -> Unit,
+    onDeleteComment: (Long) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -201,17 +239,9 @@ private fun ProductDetailContent(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row {
-                Text(
-                    text = "销量 ${product.sales}",
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
+                Text(text = "销量 ${product.sales}", color = Color.Gray, fontSize = 12.sp)
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "库存 ${product.stock}",
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
+                Text(text = "库存 ${product.stock}", color = Color.Gray, fontSize = 12.sp)
             }
         }
 
@@ -269,15 +299,28 @@ private fun ProductDetailContent(
                 lineHeight = 22.sp
             )
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 评论区（三级评论：L1 评价 / L2 卖家回复 / L3 追问）
+        CommentSection(
+            state = commentState,
+            onRetry = onRetryComments,
+            onLoadMore = onLoadMoreComments,
+            onExpandAsks = onExpandAsks,
+            onToggleReviewForm = onToggleReviewForm,
+            onSubmitReview = onSubmitReview,
+            onToggleAskInput = onToggleAskInput,
+            onSubmitAsk = onSubmitAsk,
+            onDeleteComment = onDeleteComment
+        )
     }
 }
 
 @Composable
 private fun BottomActionBar(
-    product: com.ecommerce.core.model.Product,
+    product: Product,
     quantity: Int,
-    onDecrease: () -> Unit,
-    onIncrease: () -> Unit,
     onAddToCart: () -> Unit,
     onBuyNow: () -> Unit
 ) {

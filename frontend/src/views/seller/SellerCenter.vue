@@ -8,7 +8,7 @@
       <el-row :gutter="20">
         <el-col :span="6">
           <div class="stat-card">
-            <div class="stat-icon" style="background: #409eff">
+            <div class="stat-icon stat-icon--brand">
               <el-icon size="30"><Goods /></el-icon>
             </div>
             <div class="stat-info">
@@ -20,7 +20,7 @@
         
         <el-col :span="6">
           <div class="stat-card">
-            <div class="stat-icon" style="background: #67c23a">
+            <div class="stat-icon stat-icon--success">
               <el-icon size="30"><Document /></el-icon>
             </div>
             <div class="stat-info">
@@ -32,7 +32,7 @@
         
         <el-col :span="6">
           <div class="stat-card">
-            <div class="stat-icon" style="background: #e6a23c">
+            <div class="stat-icon stat-icon--warning">
               <el-icon size="30"><Money /></el-icon>
             </div>
             <div class="stat-info">
@@ -44,7 +44,7 @@
         
         <el-col :span="6">
           <div class="stat-card">
-            <div class="stat-icon" style="background: #f56c6c">
+            <div class="stat-icon stat-icon--danger">
               <el-icon size="30"><User /></el-icon>
             </div>
             <div class="stat-info">
@@ -129,19 +129,19 @@ const loadStats = async () => {
     
     h2 {
       font-size: 24px;
-      color: #333;
+      color: $color-text-primary;
     }
   }
   
   .dashboard {
     .stat-card {
-      background: #fff;
+      background: $color-bg-card;
       border-radius: 8px;
       padding: 20px;
       display: flex;
       align-items: center;
       gap: 20px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: $shadow-sm;
       
       .stat-icon {
         width: 60px;
@@ -150,18 +150,25 @@ const loadStats = async () => {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
+        color: $color-text-inverse;
+
+        // 原先四个卡片用内联 style 写死了 EP 默认蓝 #409eff 等色值，
+        // 既绕过了主题系统，也让「全站不出现默认蓝」无法成立。
+        &--brand   { background: $color-primary; }
+        &--success { background: $color-success; }
+        &--warning { background: $color-warning; }
+        &--danger  { background: $color-danger; }
       }
       
       .stat-info {
         .stat-value {
           font-size: 24px;
           font-weight: bold;
-          color: #333;
+          color: $color-text-primary;
         }
         
         .stat-label {
-          color: #999;
+          color: $color-text-secondary;
           margin-top: 5px;
         }
       }
@@ -173,7 +180,7 @@ const loadStats = async () => {
       h3 {
         font-size: 20px;
         margin-bottom: 20px;
-        color: #333;
+        color: $color-text-primary;
       }
       
       .action-card {
@@ -186,13 +193,13 @@ const loadStats = async () => {
         }
         
         .el-icon {
-          color: #ff6700;
+          color: $color-primary;
           margin-bottom: 10px;
         }
         
         p {
           font-size: 16px;
-          color: #666;
+          color: $color-text-regular;
         }
       }
     }
