@@ -1,26 +1,115 @@
+// =============================================================================
+// 全局基础样式：reset + 布局容器 + 少量通用原子类
+//
+// 色值一律取自 variables.scss（由 vite 自动注入），本文件不允许出现字面色值。
+// =============================================================================
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html,
 body {
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-  background-color: #f5f5f5;
+  height: 100%;
 }
 
+body {
+  font-family: $font-family-base;
+  font-size: $font-base;
+  line-height: $line-height-base;
+  color: $color-text-primary;
+  background-color: $color-bg-page;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: $font-weight-bold;
+  color: $color-text-title;
+  line-height: $line-height-tight;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+// 细滚动条，避免默认滚动条打断整体的干净感
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $gray-300;
+  border-radius: $radius-pill;
+
+  &:hover {
+    background: $gray-400;
+  }
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+// -----------------------------------------------------------------------------
+// 布局
+// -----------------------------------------------------------------------------
 .container {
-  max-width: 1200px;
+  max-width: $layout-max-width;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 $space-5;
 }
 
 .page-container {
-  padding: 20px 0;
-  min-height: calc(100vh - 60px - 200px);
+  padding: $space-6 0 $space-10;
+  min-height: calc(100vh - #{$layout-header-height} - #{$layout-footer-height});
 }
 
+/// 页面主标题：左侧品牌色竖条 + 标题，全站统一。
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-bottom: $space-5;
+  font-size: $font-2xl;
+  color: $color-text-title;
+
+  &::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    border-radius: $radius-pill;
+    background: $color-primary;
+  }
+}
+
+/// 标准内容卡片。
+.surface-card {
+  @include card;
+}
+
+// -----------------------------------------------------------------------------
+// 通用原子类（保留改造前已被模板引用的类名，避免破坏存量结构）
+// -----------------------------------------------------------------------------
 .text-center {
   text-align: center;
 }
@@ -29,53 +118,74 @@ body {
   text-align: right;
 }
 
+.text-muted {
+  color: $color-text-secondary;
+}
+
 .mt-20 {
-  margin-top: 20px;
+  margin-top: $space-5;
 }
 
 .mb-20 {
-  margin-bottom: 20px;
+  margin-bottom: $space-5;
 }
 
 .ml-10 {
-  margin-left: 10px;
+  margin-left: $space-2 + 2px;
 }
 
 .mr-10 {
-  margin-right: 10px;
+  margin-right: $space-2 + 2px;
 }
 
+/// 价格文本。模板里大量使用 `<span class="price">{{ product.price }}</span>`，
+/// ¥ 由伪元素补齐，改造后维持同一契约。
 .price {
-  color: #ff6700;
-  font-size: 18px;
-  font-weight: bold;
-  
+  color: $color-price;
+  font-size: $font-lg;
+  font-weight: $font-weight-bold;
+
   &::before {
     content: '¥';
-    font-size: 14px;
+    font-size: $font-base;
+    margin-right: 1px;
   }
 }
 
 .product-card {
   cursor: pointer;
-  transition: all 0.3s;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  @include lift;
+}
+
+// -----------------------------------------------------------------------------
+// 图片 / 空态占位：改造前每个页面各写一份，这里收敛成全局类
+// -----------------------------------------------------------------------------
+.image-placeholder {
+  @include flex-center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  color: $color-text-placeholder;
+  background: $gradient-placeholder;
+
+  span {
+    margin-top: $space-2;
+    font-size: $font-xs;
+    color: $color-text-secondary;
+    max-width: 80%;
+    @include text-ellipsis;
   }
 }
 
-.btn-primary {
-  background-color: #ff6700;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  
-  &:hover {
-    background-color: #f25807;
-  }
+// -----------------------------------------------------------------------------
+// 路由切换过渡：极轻量的淡入，不做位移，避免长页面出现跳动
+// -----------------------------------------------------------------------------
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity $transition-fast;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }

@@ -1,0 +1,128 @@
+// =============================================================================
+// Element Plus 主题覆盖（全站唯一入口）
+//
+// 为什么用 CSS 变量而不是 SCSS 变量覆盖：
+//   Element Plus 2.3 的所有组件在运行时读取 --el-* CSS 变量，
+//   在 :root 上重新定义即可整站生效，不需要重新编译 EP 的 sass 源码，
+//   也就不需要在 vite 里配 EP 的 sass 入口。改造成本最低、最不容易漏。
+//
+// 本文件必须在 element-plus/dist/index.css 之后引入（见 main.js），否则被默认值覆盖。
+//
+// ⚠️ 有了这里的统一覆盖之后，任何页面都不应该再写
+//    `.el-button--primary { background-color: #ff6700 }` 这类 scoped 补丁。
+//    改造前 ProductDetail / Cart 各写了一份，而 MainLayout 的注册按钮没写，
+//    于是全站唯一一个默认蓝按钮就露在了 Header 上 —— 这类不一致必须从根上消除。
+// =============================================================================
+
+:root {
+  // ---- 主色及其色阶（EP 组件内部按 light-N / dark-2 取色）----
+  --el-color-primary: #{$brand-500};
+  --el-color-primary-light-3: #{$brand-light-3};
+  --el-color-primary-light-5: #{$brand-400};
+  --el-color-primary-light-7: #{$brand-300};
+  --el-color-primary-light-8: #{$brand-200};
+  --el-color-primary-light-9: #{$brand-100};
+  --el-color-primary-dark-2: #{$brand-700};
+
+  // ---- 语义色 ----
+  --el-color-success: #{$color-success};
+  --el-color-success-light-9: #{$color-success-soft};
+  --el-color-warning: #{$color-warning};
+  --el-color-warning-light-9: #{$color-warning-soft};
+  --el-color-danger: #{$color-danger};
+  --el-color-danger-light-9: #{$color-danger-soft};
+  --el-color-error: #{$color-danger};
+  --el-color-info: #{$color-info};
+
+  // ---- 文本 ----
+  --el-text-color-primary: #{$color-text-primary};
+  --el-text-color-regular: #{$color-text-regular};
+  --el-text-color-secondary: #{$color-text-secondary};
+  --el-text-color-placeholder: #{$color-text-placeholder};
+
+  // ---- 边框 ----
+  --el-border-color: #{$color-border};
+  --el-border-color-light: #{$color-border-light};
+  --el-border-color-lighter: #{$color-border-lighter};
+
+  // ---- 填充 ----
+  --el-fill-color-blank: #{$color-bg-card};
+  --el-fill-color-light: #{$color-bg-muted};
+
+  // ---- 圆角：整体比 EP 默认(4px)更圆，配合卡片风格 ----
+  --el-border-radius-base: #{$radius-sm};
+  --el-border-radius-small: #{$radius-xs};
+  --el-border-radius-round: #{$radius-pill};
+
+  // ---- 字体 ----
+  --el-font-family: #{$font-family-base};
+  --el-font-size-base: #{$font-base};
+
+  // ---- 阴影 ----
+  --el-box-shadow-light: #{$shadow-sm};
+  --el-box-shadow: #{$shadow-md};
+}
+
+// -----------------------------------------------------------------------------
+// 少量组件级微调：只改「质感」，不改 EP 的行为与结构
+// -----------------------------------------------------------------------------
+
+.el-button {
+  font-weight: $font-weight-medium;
+
+  &--primary:not(.is-text):not(.is-link) {
+    box-shadow: 0 2px 6px rgba(255, 103, 0, 0.2);
+
+    &:hover {
+      box-shadow: $shadow-brand;
+    }
+
+    // 禁用态不该有「可点」的投影暗示
+    &.is-disabled,
+    &.is-disabled:hover {
+      box-shadow: none;
+    }
+  }
+}
+
+.el-card,
+.el-dialog {
+  border-radius: $radius-lg;
+}
+
+.el-dialog__header {
+  margin-right: 0;
+  padding-bottom: $space-4;
+  border-bottom: 1px solid $color-border-lighter;
+
+  .el-dialog__title {
+    font-size: $font-md;
+    font-weight: $font-weight-bold;
+    color: $color-text-title;
+  }
+}
+
+.el-message {
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+}
+
+.el-tag {
+  border-radius: $radius-xs;
+  font-weight: $font-weight-medium;
+}
+
+.el-input__wrapper,
+.el-textarea__inner {
+  border-radius: $radius-sm;
+}
+
+.el-pagination.is-background .el-pager li {
+  border-radius: $radius-xs;
+}
+
+.el-rate {
+  // 评分星星默认是 EP 的黄色，保持不变 —— 五角星用橙色会和主色打架，
+  // 而黄色星是评分领域的通用视觉惯例，属于「不该改」的部分。
+  --el-rate-icon-margin: 2px;
+}

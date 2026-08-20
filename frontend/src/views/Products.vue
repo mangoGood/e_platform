@@ -147,14 +147,14 @@ const goToProduct = (productId) => {
     
     h2 {
       font-size: 24px;
-      color: #333;
+      color: $color-text-primary;
     }
   }
   
   .filter-section {
     margin-bottom: 20px;
     padding: 20px;
-    background: #fff;
+    background: $color-bg-card;
     border-radius: 8px;
   }
   
@@ -165,7 +165,7 @@ const goToProduct = (productId) => {
     min-height: 400px;
     
     .product-card {
-      background: #fff;
+      background: $color-bg-card;
       border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
@@ -173,14 +173,14 @@ const goToProduct = (productId) => {
       
       &:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: $shadow-md;
       }
       
       .product-image {
         width: 100%;
         height: 200px;
         overflow: hidden;
-        background: #f5f7fa;
+        background: $color-bg-subtle;
         
         .el-image {
           width: 100%;
@@ -194,13 +194,13 @@ const goToProduct = (productId) => {
           justify-content: center;
           width: 100%;
           height: 200px;
-          color: #c0c4cc;
-          background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
+          color: $color-text-placeholder;
+          background: $gradient-placeholder;
           
           span {
             margin-top: 8px;
             font-size: 12px;
-            color: #909399;
+            color: $color-text-secondary;
             max-width: 80%;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -221,7 +221,7 @@ const goToProduct = (productId) => {
         }
         
         .product-desc {
-          color: #999;
+          color: $color-text-secondary;
           font-size: 14px;
           margin-bottom: 10px;
           overflow: hidden;
@@ -235,7 +235,7 @@ const goToProduct = (productId) => {
           align-items: center;
           
           .sales {
-            color: #999;
+            color: $color-text-secondary;
             font-size: 12px;
           }
         }

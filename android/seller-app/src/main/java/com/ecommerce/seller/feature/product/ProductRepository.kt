@@ -1,42 +1,68 @@
 package com.ecommerce.seller.feature.product
 
 import com.ecommerce.core.datastore.TokenManager
-import com.ecommerce.core.model.ApiResponse
 import com.ecommerce.core.model.Product
 import com.ecommerce.core.model.ProductRequest
 import com.ecommerce.core.network.ProductApi
+import com.ecommerce.core.network.apiCall
+import com.ecommerce.core.network.requireData
+import com.ecommerce.core.network.requireSuccess
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * 卖家商品仓库。
+ *
+ * 改造要点：删除本地重复的 `requireData()`；
+ * 增删改这类空返回接口改用 [requireSuccess]（它们的 `data` 恒为 null）。
+ */
 @Singleton
 class ProductRepository @Inject constructor(
     private val productApi: ProductApi,
     private val tokenManager: TokenManager
 ) {
+
     private val sellerId: Long get() = tokenManager.userId
 
-    suspend fun getMyProducts(): Result<List<Product>> = runCatching {
+    /** 当前卖家的全部商品 */
+    suspend fun getMyProducts(): Result<List<Product>> = apiCall {
         productApi.getProductsBySellerId(sellerId).requireData()
     }
 
-    suspend fun getProduct(id: Long): Result<Product> = runCatching {
+    /**
+     * 单个商品详情。
+     *
+     * @param id 商品 id
+     */
+    suspend fun getProduct(id: Long): Result<Product> = apiCall {
         productApi.getProductById(id).requireData()
     }
 
-    suspend fun addProduct(request: ProductRequest): Result<Unit> = runCatching {
-        productApi.addProduct(request).requireData()
+    /**
+     * 新增商品。
+     *
+     * @param request 商品表单
+     */
+    suspend fun addProduct(request: ProductRequest): Result<Unit> = apiCall {
+        productApi.addProduct(request).requireSuccess()
     }
 
-    suspend fun updateProduct(id: Long, request: ProductRequest): Result<Unit> = runCatching {
-        productApi.updateProduct(id, request).requireData()
+    /**
+     * 更新商品。
+     *
+     * @param id      商品 id
+     * @param request 商品表单
+     */
+    suspend fun updateProduct(id: Long, request: ProductRequest): Result<Unit> = apiCall {
+        productApi.updateProduct(id, request).requireSuccess()
     }
 
-    suspend fun deleteProduct(id: Long): Result<Unit> = runCatching {
-        productApi.deleteProduct(id).requireData()
-    }
-
-    private fun <T> ApiResponse<T>.requireData(): T {
-        if (code != 200) throw RuntimeException(message ?: "请求失败")
-        return data ?: throw RuntimeException("数据为空")
+    /**
+     * 删除商品。
+     *
+     * @param id 商品 id
+     */
+    suspend fun deleteProduct(id: Long): Result<Unit> = apiCall {
+        productApi.deleteProduct(id).requireSuccess()
     }
 }

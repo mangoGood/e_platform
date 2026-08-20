@@ -210,20 +210,20 @@ const handleCancel = async (orderId) => {
     
     h2 {
       font-size: 24px;
-      color: #333;
+      color: $color-text-primary;
     }
   }
   
   .orders-content {
     .empty-orders {
-      background: #fff;
+      background: $color-bg-card;
       border-radius: 8px;
       padding: 60px 0;
     }
     
     .orders-list {
       .order-card {
-        background: #fff;
+        background: $color-bg-card;
         border-radius: 8px;
         margin-bottom: 20px;
         overflow: hidden;
@@ -232,8 +232,8 @@ const handleCancel = async (orderId) => {
           display: flex;
           align-items: center;
           padding: 15px 20px;
-          background: #f5f5f5;
-          border-bottom: 1px solid #e8e8e8;
+          background: $color-bg-muted;
+          border-bottom: 1px solid $color-border-light;
           
           .order-no {
             font-weight: bold;
@@ -241,7 +241,7 @@ const handleCancel = async (orderId) => {
           }
           
           .order-time {
-            color: #999;
+            color: $color-text-secondary;
             margin-right: auto;
           }
         }
@@ -256,7 +256,7 @@ const handleCancel = async (orderId) => {
               display: flex;
               align-items: center;
               padding: 10px 0;
-              border-bottom: 1px solid #f5f5f5;
+              border-bottom: 1px solid $color-border-lighter;
               
               &:last-child {
                 border-bottom: none;
@@ -279,8 +279,8 @@ const handleCancel = async (orderId) => {
                   justify-content: center;
                   width: 100%;
                   height: 100%;
-                  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
-                  color: #c0c4cc;
+                  background: $gradient-placeholder;
+                  color: $color-text-placeholder;
                   border-radius: 4px;
                 }
               }
@@ -294,13 +294,13 @@ const handleCancel = async (orderId) => {
                 }
                 
                 .item-qty {
-                  color: #999;
+                  color: $color-text-secondary;
                   font-size: 13px;
                 }
               }
               
               .item-amount {
-                color: #ff6700;
+                color: $color-price;
                 font-weight: bold;
               }
             }
@@ -309,11 +309,11 @@ const handleCancel = async (orderId) => {
           .order-summary {
             p {
               margin-bottom: 8px;
-              color: #666;
+              color: $color-text-regular;
               font-size: 14px;
               
               .price {
-                color: #ff6700;
+                color: $color-price;
                 font-weight: bold;
                 font-size: 16px;
               }
@@ -323,7 +323,7 @@ const handleCancel = async (orderId) => {
         
         .order-footer {
           padding: 15px 20px;
-          border-top: 1px solid #e8e8e8;
+          border-top: 1px solid $color-border-light;
           text-align: right;
           
           .el-button + .el-button {

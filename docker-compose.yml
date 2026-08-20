@@ -1,5 +1,4 @@
-version: '3.8'
-
+# Compose Specification（不再声明 version，新版 docker compose 已废弃该字段）
 services:
   mysql:
     image: docker.1ms.run/mysql:8.0
@@ -7,25 +6,51 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: e_platform
+      # 时区修复（BUG-3）：容器 OS 时区设为 Asia/Shanghai，
+      # 使 @@global.time_zone=SYSTEM 时 NOW()/CURRENT_TIMESTAMP 落在中国时区，
+      # 与应用 JVM 的 CST(+0800) 写入刻度对齐。
+      TZ: Asia/Shanghai
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4' --skip-character-set-client-handshake
+    # --default-time-zone=+8:00 是直接、权威的修复：无论容器 OS 是否带 tzdata，
+    # 都强制 MySQL 服务端的 time_zone 为东八区，NOW()/DEFAULT CURRENT_TIMESTAMP 一律 +8:00。
+    # 与 TZ 环境变量双保险，二者一致。
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4' --skip-character-set-client-handshake --default-time-zone=+8:00
+    healthcheck:
+      # 供 start.sh 轮询等待就绪，避免固定 sleep
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
     networks:
       e-platform-network:
         ipv4_address: 192.168.10.10
 
   redis:
-    image: docker.1ms.run/bitnami/redis:latest
+    # 官方 redis 镜像（原 bitnami/redis 已切换）
+    image: docker.1ms.run/redis:7
     container_name: e-platform-redis
+    # 官方镜像不认识 bitnami 专有的 ALLOW_EMPTY_PASSWORD，已删除该环境变量。
+    # 默认即为无密码模式，开启 AOF 持久化。
+    # TZ 仅影响 redis 进程自身的日志时间戳，不改变任何存储值（redis 不按 timezone 存时间），
+    # 这里加上仅为与 mysql 的日志时区保持一致，方便排查，无功能影响。
     environment:
-      ALLOW_EMPTY_PASSWORD: yes
+      TZ: Asia/Shanghai
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
     networks:
       e-platform-network:
         ipv4_address: 192.168.10.11
@@ -39,6 +64,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      # 同 redis：仅日志时间戳一致，无数据存储层面的 timezone 概念。
+      TZ: Asia/Shanghai
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:

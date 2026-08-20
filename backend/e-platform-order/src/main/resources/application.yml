@@ -51,5 +51,36 @@ logging:
     com.ecommerce: info
 
 # 内部服务调用令牌
+# 【安全】不设默认值，理由同 product 模块：写死的兜底口令等于把内部接口钥匙提交进仓库。
+# 未配置时 /order/internal/** 全量拒绝，FeignConfig 也不会挂该头。
 internal:
-  token: ${INTERNAL_TOKEN:ePlatformInternalSecret2026}
+  token: ${INTERNAL_TOKEN:}
+
+# 订单状态流转
+order:
+  ship:
+    # 是否允许「未付款直接发货」。
+    # 本项目未接真实支付，订单会永远停在待付款(0)，导致"已完成才能评价"这条规则无法达成。
+    # 打开后卖家可从待付款直接发货（语义等价于货到付款/线下已收款），
+    # 但 0->3 的跳跃仍被禁止、重复发货仍返回 409。接入真实支付后请设为 false。
+    allow-unpaid: ${ORDER_ALLOW_UNPAID_SHIP:true}
+
+# 网关 -> 内部服务 HMAC-SHA256 签名校验
+# secret 来源于环境变量 GATEWAY_SIGN_SECRET（start.sh 自动随机生成写入 .env）
+# 此处给空默认值仅为保证服务在裸启动时不因占位符解析失败；
+# 真实的「启用但密钥为空」校验由 GatewaySignProperties 在 T02 中 fail-fast 处理
+gateway:
+  sign:
+    enabled: ${GATEWAY_SIGN_ENABLED:true}
+    secret: ${GATEWAY_SIGN_SECRET:}
+    tolerance-ms: ${GATEWAY_SIGN_TOLERANCE_MS:300000}
+
+# 健康检查端点，供 start.sh 轮询判定服务就绪
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

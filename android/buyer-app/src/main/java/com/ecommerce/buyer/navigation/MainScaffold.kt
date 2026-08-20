@@ -12,18 +12,23 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ecommerce.core.network.SessionManager
 
 private data class BottomTab(
     val route: String,
@@ -38,15 +43,44 @@ private val bottomTabs = listOf(
     BottomTab(Routes.PROFILE, "我的", Icons.Default.Person)
 )
 
+/**
+ * 买家端主脚手架。
+ *
+ * @param sessionManager 全局会话事件总线，用于接收网络层广播的强制登出事件
+ */
 @Composable
-fun MainScaffold() {
+fun MainScaffold(sessionManager: SessionManager) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 刷新令牌彻底失效时，TokenRefresher 会广播强制登出。
+    // 这里是网络层事件落到导航层的唯一出口：提示中文原因 + 跳登录页。
+    LaunchedEffect(sessionManager) {
+        sessionManager.forcedLogout.collect { reason ->
+            // 先消费再跳转：replay = 1 会在重新订阅时重放旧事件，
+            // 不消费的话每次进前台都会被再踢一次。
+            sessionManager.consumeForcedLogout()
+            if (navController.currentDestination?.route != Routes.LOGIN) {
+                navController.navigate(Routes.LOGIN) {
+                    // inclusive = false：保留首页，买家端允许游客浏览，
+                    // 用户按返回键能退回首页而不是直接退出 App。
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                    launchSingleTop = true
+                }
+            }
+            snackbarHostState.showSnackbar(
+                message = reason,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
 
     val showBottomBar = currentRoute in bottomTabs.map { it.route }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(containerColor = Color.White) {
@@ -179,8 +213,7 @@ fun AppNavHost(
         composable(
             route = Routes.ORDER_DETAIL,
             arguments = listOf(androidx.navigation.navArgument("orderId") { type = androidx.navigation.NavType.StringType })
-        ) { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getString("orderId")?.toLongOrNull() ?: 0L
+        ) {
             com.ecommerce.buyer.feature.order.OrderDetailScreen(
                 onBack = { navController.popBackStack() }
             )

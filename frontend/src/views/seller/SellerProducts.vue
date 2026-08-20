@@ -280,12 +280,12 @@ const resetForm = () => {
     
     h2 {
       font-size: 24px;
-      color: #333;
+      color: $color-text-primary;
     }
   }
   
   .products-table {
-    background: #fff;
+    background: $color-bg-card;
     border-radius: 8px;
     padding: 20px;
   }

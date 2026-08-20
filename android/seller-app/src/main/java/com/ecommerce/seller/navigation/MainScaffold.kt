@@ -12,9 +12,14 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ecommerce.core.network.SessionManager
 
 private data class BottomTab(
     val route: String,
@@ -39,15 +45,39 @@ private val bottomTabs = listOf(
     BottomTab(Routes.PROFILE, "我的", Icons.Default.Person)
 )
 
+/**
+ * 卖家端主脚手架。
+ *
+ * @param sessionManager 全局会话事件总线，用于接收网络层广播的强制登出事件
+ */
 @Composable
-fun MainScaffold() {
+fun MainScaffold(sessionManager: SessionManager) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // 与买家端同构：刷新令牌彻底失效 -> TokenRefresher 广播 -> 这里跳登录页。
+    LaunchedEffect(sessionManager) {
+        sessionManager.forcedLogout.collect { reason ->
+            sessionManager.consumeForcedLogout()
+            if (navController.currentDestination?.route != Routes.LOGIN) {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                    launchSingleTop = true
+                }
+            }
+            snackbarHostState.showSnackbar(
+                message = reason,
+                duration = SnackbarDuration.Short
+            )
+        }
+    }
 
     val showBottomBar = currentRoute in bottomTabs.map { it.route }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(containerColor = Color.White) {
